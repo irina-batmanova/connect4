@@ -6,80 +6,40 @@ class Game:
         self.num_players = 2
         for i in range(self.height):
             self.field.append([0] * self.width)
+        self.conditions = [
+            {"h_start": 0, "h_end": self.height, "w_start": 0, "w_end": self.width - 3,
+             "stepper": lambda i, j, k: (i, j + k)},
+            {"h_start": 0, "h_end": self.height - 3, "w_start": 0, "w_end": self.width,
+             "stepper": lambda i, j, k: (i + k, j)},
+            {"h_start": 0, "h_end": self.height - 3, "w_start": 0, "w_end": self.width - 3,
+             "stepper": lambda i, j, k: (i + k, j + k)},
+            {"h_start": 0, "h_end": self.height, "w_start": 0, "w_end": self.width - 3,
+             "stepper": lambda i, j, k: (i - k, j + k)},
+            {"h_start": 3, "h_end": self.height, "w_start": 3, "w_end": self.width,
+             "stepper": lambda i, j, k: (i - k, j - k)},
+            {"h_start": 0, "h_end": self.height - 3, "w_start": 3, "w_end": self.width,
+             "stepper": lambda i, j, k: (i + k, j - k)},
+        ]
+
+    def _check_one_direction(self, conditions, player):
+        for i in range(conditions["h_start"], conditions["h_end"]):
+            for j in range(conditions["w_start"], conditions["w_end"]):
+                if self.field[i][j] == player:
+                    count = 1
+                    for k in range(1, 4):
+                        step_h, step_w = conditions["stepper"](i, j, k)
+                        if self.field[step_h][step_w] != player:
+                            break
+                        else:
+                            count += 1
+                    if count == 4:
+                        return True
 
     def player_won(self, player):
-        # horizontal
-        for i in range(self.height):
-            for j in range(self.width - 3):
-                if self.field[i][j] == player:
-                    count = 1
-                    for k in range(1, 4):
-                        if self.field[i][j + k] != player:
-                            break
-                        else:
-                            count += 1
-                    if count == 4:
-                        return True
-        # vertical
-        for i in range(self.height - 3):
-            for j in range(self.width):
-                if self.field[i][j] == player:
-                    count = 1
-                    for k in range(1, 4):
-                        if self.field[i + k][j] != player:
-                            break
-                        else:
-                            count += 1
-                    if count == 4:
-                        return True
-        # from upper left to lower right
-        for i in range(self.height - 3):
-            for j in range(self.width - 3):
-                if self.field[i][j] == player:
-                    count = 1
-                    for k in range(1, 4):
-                        if self.field[i + k][j + k] != player:
-                            break
-                        else:
-                            count += 1
-                    if count == 4:
-                        return True
-        # from lower left to upper right
-        for i in range(3, self.height):
-            for j in range(self.width - 3):
-                if self.field[i][j] == player:
-                    count = 1
-                    for k in range(1, 4):
-                        if self.field[i - k][j + k] != player:
-                            break
-                        else:
-                            count += 1
-                    if count == 4:
-                        return True
-        # from lower right to upper left
-        for i in range(3, self.height):
-            for j in range(3, self.width):
-                if self.field[i][j] == player:
-                    count = 1
-                    for k in range(1, 4):
-                        if self.field[i - k][j - k] != player:
-                            break
-                        else:
-                            count += 1
-                    if count == 4:
-                        return True
-        # from upper right to lower left
-        for i in range(self.height - 3):
-            for j in range(3, self.width):
-                if self.field[i][j] == player:
-                    count = 1
-                    for k in range(1, 4):
-                        if self.field[i + k][j - k] != player:
-                            break
-                        else:
-                            count += 1
-                    if count == 4:
-                        return True
+        for cond in self.conditions:
+            res = self._check_one_direction(cond, player)
+            if res:
+                return res
         return False
 
     def make_move(self, player, column):
